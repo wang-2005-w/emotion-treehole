@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🌿 我的树洞 - 情绪树洞</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- 飘落花瓣 -->
+  <div class="petals" id="petals"></div>
+
+  <!-- 顶部品牌条 -->
+  <header class="top-bar">
+    <span class="top-title">🌳 情绪树洞</span>
+  </header>
+
+  <div class="container">
+
+    <!-- 📱 登录区（未登录时显示） -->
+    <div id="loginSection">
+      <div class="hero">
+        <div class="hero-icon" style="font-size:52px;">🌳</div>
+        <h1 style="font-size:20px;margin-bottom:6px;">欢迎来到情绪树洞</h1>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+          登录后可以倾诉心事<br>
+          匿名倾诉，温柔守护 🌸
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label>📱 手机号</label>
+          <input type="tel" id="phoneInput" placeholder="请输入手机号" maxlength="11"
+            style="width:100%;padding:12px 14px;border:2px solid var(--card-border);border-radius:var(--radius-sm);font-size:16px;font-family:inherit;outline:none;box-sizing:border-box;-webkit-appearance:none;"
+            onfocus="this.style.borderColor='var(--rose)'" onblur="this.style.borderColor='var(--card-border)'">
+        </div>
+        <div class="form-group">
+          <label>🔑 验证码</label>
+          <div style="display:flex;gap:10px;">
+            <input type="text" id="codeInput" placeholder="输入验证码" maxlength="6"
+              style="flex:1;padding:12px 14px;border:2px solid var(--card-border);border-radius:var(--radius-sm);font-size:16px;font-family:inherit;outline:none;box-sizing:border-box;-webkit-appearance:none;"
+              onfocus="this.style.borderColor='var(--rose)'" onblur="this.style.borderColor='var(--card-border)'">
+            <button id="sendCodeBtn" onclick="sendCode()" style="white-space:nowrap;padding:12px 16px;border:none;border-radius:var(--radius-sm);background:var(--lavender-light);color:var(--lavender);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:44px;transition:all 0.3s;">发送验证码</button>
+          </div>
+        </div>
+        <div id="codeDisplay" style="display:none;padding:12px 16px;background:var(--mint-light);border-radius:var(--radius-sm);margin-bottom:16px;text-align:center;font-size:14px;color:var(--text-secondary);">
+          ✨ 模拟验证码：<strong id="showCode" style="font-size:22px;color:var(--rose);letter-spacing:4px;"></strong>
+          <div style="font-size:12px;margin-top:4px;color:var(--text-muted);">（正式版会发短信，这里是模拟展示）</div>
+        </div>
+        <div class="btn-center">
+          <button class="btn btn-primary" id="loginSubmitBtn" onclick="submitLogin()" style="width:100%;">登录</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⭐ 起名区（第一次登录显示） -->
+    <div id="setupSection" style="display:none;">
+      <div class="hero" style="padding:40px 24px;">
+        <div class="hero-icon" style="font-size:56px;">🌱</div>
+        <h1 style="font-size:22px;">欢迎来到情绪树洞</h1>
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;max-width:400px;margin-left:auto;margin-right:auto;">
+          给自己取一个树洞名吧<br>
+          以后大家就在树洞里认识你了 🌸
+        </p>
+        <div style="max-width:300px;margin:0 auto;">
+          <input type="text" id="setupNameInput" placeholder="取个名字吧（如：星星、小月亮）" maxlength="10"
+            style="width:100%;padding:14px 18px;border:2px solid var(--card-border);border-radius:var(--radius-sm);font-size:18px;font-family:inherit;outline:none;text-align:center;box-sizing:border-box;transition:border-color 0.3s;"
+            onfocus="this.style.borderColor='var(--rose)'" onblur="this.style.borderColor='var(--card-border)'">
+          <div class="btn-center" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="saveTreeholeName()" style="padding:14px 40px;font-size:16px;">
+              🌷 进入树洞
+            </button>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">设置后可以在右上角修改</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🌸 欢迎区（已有名字后显示） -->
+    <div id="welcomeSection" style="display:none;">
+      <div class="hero">
+        <div class="hero-icon" style="font-size:60px;">🌷</div>
+        <h1 style="font-size:24px;">欢迎回来，<span id="userNameDisplay" style="background:linear-gradient(135deg,var(--rose),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;"></span></h1>
+        <p style="font-size:14px;color:var(--text-secondary);">
+          你的心事，树洞永远为你守护<br>
+          愿你今天也被温柔对待 🌸
+        </p>
+      </div>
+
+      <div class="entry-grid">
+        <a href="/post.html" class="entry-btn rose">
+          <span class="icon">📝</span>
+          <span class="label">写下心事</span>
+          <span class="desc">匿名倾诉，无人知晓</span>
+        </a>
+        <a href="/wall.html" class="entry-btn lavender">
+          <span class="icon">💭</span>
+          <span class="label">心事墙</span>
+          <span class="desc">看看大家留下的心事</span>
+        </a>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:16px;">🌿 我的树洞</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--rose-light);border-radius:var(--radius-sm);">
+            <span style="color:var(--text-secondary);font-size:14px;">🌿 树洞名</span>
+            <span id="profileName" style="font-weight:600;font-size:16px;color:var(--text-primary);">-</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--lavender-light);border-radius:var(--radius-sm);">
+            <span style="color:var(--text-secondary);font-size:14px;">📱 手机号</span>
+            <span id="profilePhone" style="font-weight:600;font-size:16px;color:var(--text-primary);">-</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--mint-light);border-radius:var(--radius-sm);">
+            <span style="color:var(--text-secondary);font-size:14px;">💌 我的心事</span>
+            <span id="profilePosts" style="font-weight:600;font-size:16px;color:var(--text-primary);">0 条</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      🌳 情绪树洞 · 温柔治愈的心事驿站
+      <span>愿所有心事，皆有归处 🌸</span>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    // 生成花瓣
+    (function() {
+      const petals = ['🌸', '🌷', '🌺', '🪷', '✨', '💮'];
+      const container = document.getElementById('petals');
+      for (let i = 0; i < 6; i++) {
+        const el = document.createElement('span');
+        el.className = 'petal';
+        el.textContent = petals[i % petals.length];
+        el.style.left = Math.random() * 100 + '%';
+        el.style.fontSize = (14 + Math.random() * 16) + 'px';
+        el.style.animationDuration = (8 + Math.random() * 12) + 's';
+        el.style.animationDelay = (Math.random() * 15) + 's';
+        container.appendChild(el);
+      }
+    })();
+
+    // 初始隐藏所有区块
+    document.getElementById('loginSection').style.display = 'none';
+
+    // 检查登录状态
+    const name = localStorage.getItem('treehole_name');
+    const phone = localStorage.getItem('treehole_phone');
+    const token = localStorage.getItem('treehole_token');
+
+    if (!token) {
+      // 没登录 → 显示登录区
+      document.getElementById('loginSection').style.display = 'block';
+    } else if (!name) {
+      // ✅ 第一次登录 → 显示起名区
+      document.getElementById('setupSection').style.display = 'block';
+      document.getElementById('setupNameInput').focus();
+    } else {
+      // ✅ 已有名字 → 显示欢迎区
+      showWelcome();
+    }
+
+    // 保存树洞名
+    function saveTreeholeName() {
+      const input = document.getElementById('setupNameInput');
+      const val = input.value.trim();
+      if (!val) {
+        showToast('🌿 给自己取个名字吧～');
+        input.focus();
+        return;
+      }
+      if (val.length < 2) {
+        showToast('至少 2 个字哦～');
+        input.focus();
+        return;
+      }
+      localStorage.setItem('treehole_name', val);
+      showToast('🌸 欢迎你，' + val + '！');
+      showWelcome();
+    }
+
+    // 显示欢迎区
+    function showWelcome() {
+      document.getElementById('setupSection').style.display = 'none';
+      document.getElementById('welcomeSection').style.display = 'block';
+
+      const name = localStorage.getItem('treehole_name');
+      const phone = localStorage.getItem('treehole_phone');
+
+      document.getElementById('userNameDisplay').textContent = name;
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('profilePhone').textContent = phone || '已绑定';
+
+      // 统计心事数
+      fetch('/api/posts').then(r => r.json()).then(d => {
+        if (d.success) document.getElementById('profilePosts').textContent = d.posts.length + ' 条';
+      });
+    }
+  </script>
+  <!-- 底部导航 -->
+  <nav class="bottom-nav">
+    <a href="/" class="nav-item">
+      <span class="nav-icon">🌳</span>
+      <span class="nav-label">首页</span>
+    </a>
+    <a href="/post.html" class="nav-item">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">投稿</span>
+    </a>
+    <a href="/wall.html" class="nav-item">
+      <span class="nav-icon">💭</span>
+      <span class="nav-label">心事墙</span>
+    </a>
+    <a href="/me.html" class="nav-item active">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">我的</span>
+    </a>
+  </nav>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>📝 写下心事 - 情绪树洞</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- 飘落花瓣 -->
+  <div class="petals" id="petals"></div>
+
+  <!-- 顶部品牌条 -->
+  <header class="top-bar">
+    <span class="top-title">🌳 情绪树洞</span>
+  </header>
+
+  <div class="container">
+
+    <div class="card">
+      <h2 style="margin-bottom: 8px;">📝 写下你的心事</h2>
+      <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;">
+        不用排版，不用修饰，不用小心翼翼<br>
+        想说什么就说什么，想吐槽就吐槽，想难过就难过
+      </p>
+
+      <!-- 标签选择 -->
+      <div class="form-group">
+        <label>🏷️ 选一个标签（选填）</label>
+        <div class="tag-select" id="tagSelect">
+          <button class="tag-option selected" data-tag="💭 心事">💭 心事</button>
+          <button class="tag-option" data-tag="😢 难过">😢 难过</button>
+          <button class="tag-option" data-tag="😤 吐槽">😤 吐槽</button>
+          <button class="tag-option" data-tag="💪 压力">💪 压力</button>
+          <button class="tag-option" data-tag="💔 遗憾">💔 遗憾</button>
+          <button class="tag-option" data-tag="🌙 深夜">🌙 深夜</button>
+          <button class="tag-option" data-tag="🌸 日常">🌸 日常</button>
+          <button class="tag-option" data-tag="🎉 开心">🎉 开心</button>
+        </div>
+      </div>
+
+      <!-- 内容输入 -->
+      <div class="form-group">
+        <label>💌 你的心事</label>
+        <textarea id="contentInput" placeholder="在这里写下你想说的话吧……&#10;&#10;不用小心翼翼，没有人评判你&#10;所有情绪都值得被温柔对待……"></textarea>
+        <div class="char-count"><span id="charCount">0</span> / 2000</div>
+      </div>
+
+      <!-- 提交按钮 -->
+      <div class="btn-center">
+        <button class="btn btn-primary" id="submitBtn" onclick="submitPost()">
+          🌷 安放心事
+        </button>
+      </div>
+    </div>
+
+    <!-- 温柔的鼓励 -->
+    <div class="card" style="text-align: center;">
+      <p style="font-size: 14px; color: var(--text-secondary); line-height: 2;">
+        🌸 允许自己情绪低落，也是一种勇敢<br>
+        💪 你从来不是一个人
+      </p>
+    </div>
+
+    <div class="footer">
+      🌳 情绪树洞 · 温柔治愈的心事驿站
+      <span>愿所有心事，皆有归处 🌸</span>
+    </div>
+  </div>
+
+  <!-- 成功弹窗 -->
+  <div class="success-modal" id="successModal">
+    <div class="success-card">
+      <div class="icon">🌷</div>
+      <h2>心事已安放好啦</h2>
+      <p>你从来不是一个人 ❤️</p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button class="btn btn-primary" onclick="location.href='/wall.html'">去看看心事墙</button>
+        <button class="btn btn-secondary" onclick="closeSuccess()">再写一条</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    // 生成花瓣
+    const petals = ['🌸', '🌷', '🌺', '🪷', '✨', '💮'];
+    const container = document.getElementById('petals');
+    for (let i = 0; i < 6; i++) {
+      const el = document.createElement('span');
+      el.className = 'petal';
+      el.textContent = petals[i % petals.length];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.fontSize = (14 + Math.random() * 16) + 'px';
+      el.style.animationDuration = (8 + Math.random() * 12) + 's';
+      el.style.animationDelay = (Math.random() * 15) + 's';
+      container.appendChild(el);
+    }
+  </script>
+  <!-- 底部导航 -->
+  <nav class="bottom-nav">
+    <a href="/" class="nav-item">
+      <span class="nav-icon">🌳</span>
+      <span class="nav-label">首页</span>
+    </a>
+    <a href="/post.html" class="nav-item active">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">投稿</span>
+    </a>
+    <a href="/wall.html" class="nav-item">
+      <span class="nav-icon">💭</span>
+      <span class="nav-label">心事墙</span>
+    </a>
+    <a href="/me.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">我的</span>
+    </a>
+  </nav>
+</body>
+</html>

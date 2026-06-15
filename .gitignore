@@ -1,0 +1,8 @@
+node_modules/
+data/posts.json
+release/
+dist/
+.env
+*.log
+.DS_Store
+Thumbs.db

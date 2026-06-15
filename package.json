@@ -1,0 +1,49 @@
+{
+  "name": "emotion-treehole",
+  "version": "1.0.0",
+  "description": "🌳 情绪树洞 - 温柔治愈的匿名心事分享平台",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "node server.js",
+    "electron": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist-win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.treehole.emotion",
+    "productName": "情绪树洞",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "server.js",
+      "electron-main.js",
+      "package.json",
+      "public/**/*",
+      "data/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": null,
+      "artifactName": "情绪树洞-${version}-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "🌳 情绪树洞"
+    }
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}
