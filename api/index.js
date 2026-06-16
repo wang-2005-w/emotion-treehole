@@ -1,5 +1,5 @@
-// 🌳 情绪树洞 - Vercel Serverless 入口
-// =========================================
+// 🌳 情绪树洞 - Vercel Serverless 入口（Redis 版）
+// ===============================================
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -7,11 +7,20 @@ const serverless = require('serverless-http');
 
 const app = express();
 
-// ── 数据文件路径 ──
+// ── Redis 连接（仅在 Vercel 环境使用）──
+let redis = null;
+const KV_URL = process.env.KV_REST_API_URL || process.env.KV_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.KV_TOKEN;
+if (KV_URL && KV_TOKEN) {
+  const { Redis } = require('@upstash/redis');
+  redis = new Redis({ url: KV_URL, token: KV_TOKEN });
+}
+
+// ── 数据文件路径（本地开发备用）──
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'posts.json');
 
-// ── 确保数据文件存在 ──
+// ── 确保本地数据文件存在 ──
 function initData() {
   try {
     if (!fs.existsSync(DATA_DIR)) {
@@ -21,38 +30,47 @@ function initData() {
       fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2), 'utf8');
     }
   } catch (e) {
-    // Vercel 环境可能无法写入文件系统，使用内存存储
+    // Vercel 环境可能无法写入
   }
 }
 initData();
 
-// ── 内存存储（Vercel Serverless 环境使用）──
-let memoryPosts = [];
-let memoryInitialized = false;
-
 // ── 读取所有心事 ──
-function readPosts() {
+async function readPosts() {
+  // Vercel 环境优先使用 Redis
+  if (redis) {
+    try {
+      const data = await redis.get('treehole_posts');
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.error('[Redis 读取失败]', e.message);
+    }
+  }
+  // 本地开发回退到文件
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
     return JSON.parse(raw);
   } catch {
-    // 文件读取失败时使用内存存储
-    if (!memoryInitialized) {
-      memoryPosts = [];
-      memoryInitialized = true;
-    }
-    return memoryPosts;
+    return [];
   }
 }
 
 // ── 保存心事 ──
-function savePosts(posts) {
+async function savePosts(posts) {
+  // Vercel 环境优先使用 Redis
+  if (redis) {
+    try {
+      await redis.set('treehole_posts', JSON.stringify(posts));
+      return;
+    } catch (e) {
+      console.error('[Redis 保存失败]', e.message);
+    }
+  }
+  // 本地开发回退到文件
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(posts, null, 2), 'utf8');
-  } catch {
-    // Vercel 环境写入失败时保存到内存
-    memoryPosts = posts;
-    memoryInitialized = true;
+  } catch (e) {
+    console.error('[文件保存失败]', e.message);
   }
 }
 
@@ -63,21 +81,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // ── API: 获取所有心事 ──
-app.get('/api/posts', (req, res) => {
-  const posts = readPosts();
-  const publicPosts = posts.map(p => ({
-    id: p.id,
-    content: p.content,
-    tag: p.tag || '💭 心事',
-    time: p.time,
-    reply: p.reply || null,
-    replyTime: p.replyTime || null
-  })).reverse();
-  res.json({ success: true, posts: publicPosts });
+app.get('/api/posts', async (req, res) => {
+  try {
+    const posts = await readPosts();
+    const publicPosts = posts.map(p => ({
+      id: p.id,
+      content: p.content,
+      tag: p.tag || '💭 心事',
+      time: p.time,
+      reply: p.reply || null,
+      replyTime: p.replyTime || null
+    })).reverse();
+    res.json({ success: true, posts: publicPosts });
+  } catch (e) {
+    res.json({ success: false, message: '获取失败', posts: [] });
+  }
 });
 
 // ── API: 提交心事 ──
-app.post('/api/post', (req, res) => {
+app.post('/api/post', async (req, res) => {
   const { content, tag } = req.body;
   if (!content || content.trim().length === 0) {
     return res.json({ success: false, message: '心事内容不能为空哦～' });
@@ -86,49 +108,60 @@ app.post('/api/post', (req, res) => {
     return res.json({ success: false, message: '心事太长啦，最多 2000 个字哦～' });
   }
 
-  const posts = readPosts();
-  const newPost = {
-    id: Date.now(),
-    content: content.trim(),
-    tag: tag || '💭 心事',
-    time: new Date().toLocaleString('zh-CN'),
-    reply: null,
-    replyTime: null
-  };
-  posts.push(newPost);
-  savePosts(posts);
-
-  res.json({ success: true, message: '🌷 心事已安放好啦，你从来不是一个人。', post: newPost });
+  try {
+    const posts = await readPosts();
+    const newPost = {
+      id: Date.now(),
+      content: content.trim(),
+      tag: tag || '💭 心事',
+      time: new Date().toLocaleString('zh-CN'),
+      reply: null,
+      replyTime: null
+    };
+    posts.push(newPost);
+    await savePosts(posts);
+    res.json({ success: true, message: '🌷 心事已安放好啦，你从来不是一个人。', post: newPost });
+  } catch (e) {
+    res.json({ success: false, message: '提交失败，请稍后再试～' });
+  }
 });
 
 // ── API: 守护者回复 ──
-app.post('/api/reply', (req, res) => {
+app.post('/api/reply', async (req, res) => {
   const { id, reply } = req.body;
   if (!id || !reply) {
     return res.json({ success: false, message: '参数不完整' });
   }
-  const posts = readPosts();
-  const idx = posts.findIndex(p => p.id === id);
-  if (idx === -1) {
-    return res.json({ success: false, message: '未找到这条心事' });
+  try {
+    const posts = await readPosts();
+    const idx = posts.findIndex(p => p.id === id);
+    if (idx === -1) {
+      return res.json({ success: false, message: '未找到这条心事' });
+    }
+    posts[idx].reply = reply.trim();
+    posts[idx].replyTime = new Date().toLocaleString('zh-CN');
+    await savePosts(posts);
+    res.json({ success: true, message: '💌 回复已送达~' });
+  } catch (e) {
+    res.json({ success: false, message: '回复失败，请稍后再试' });
   }
-  posts[idx].reply = reply.trim();
-  posts[idx].replyTime = new Date().toLocaleString('zh-CN');
-  savePosts(posts);
-  res.json({ success: true, message: '💌 回复已送达~' });
 });
 
 // ── API: 统计数据 ──
-app.get('/api/stats', (req, res) => {
-  const posts = readPosts();
-  const total = posts.length;
-  const replied = posts.filter(p => p.reply).length;
-  const tagCount = {};
-  posts.forEach(p => {
-    const t = p.tag || '💭 心事';
-    tagCount[t] = (tagCount[t] || 0) + 1;
-  });
-  res.json({ success: true, total, replied, tagCount });
+app.get('/api/stats', async (req, res) => {
+  try {
+    const posts = await readPosts();
+    const total = posts.length;
+    const replied = posts.filter(p => p.reply).length;
+    const tagCount = {};
+    posts.forEach(p => {
+      const t = p.tag || '💭 心事';
+      tagCount[t] = (tagCount[t] || 0) + 1;
+    });
+    res.json({ success: true, total, replied, tagCount });
+  } catch (e) {
+    res.json({ success: true, total: 0, replied: 0, tagCount: {} });
+  }
 });
 
 // ── 验证码存储（内存）──
@@ -173,6 +206,24 @@ app.get('/api/user', (req, res) => {
   if (!token) return res.json({ success: false });
   res.json({ success: true, phone: '已登录用户' });
 });
+
+// ── 前端路由（SPA 支持）──
+const htmlFiles = {
+  '/': 'index.html',
+  '/index.html': 'index.html',
+  '/wall': 'wall.html',
+  '/wall.html': 'wall.html',
+  '/post': 'post.html',
+  '/post.html': 'post.html',
+  '/me': 'me.html',
+  '/me.html': 'me.html',
+};
+
+for (const [route, file] of Object.entries(htmlFiles)) {
+  app.get(route, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', file));
+  });
+}
 
 // ── Vercel Serverless Handler ──
 module.exports.handler = serverless(app);
