@@ -41,6 +41,10 @@
   <!-- 回到顶部 -->
   <button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
+  <script type="module">
+    import { injectSpeedInsights } from 'https://cdn.jsdelivr.net/npm/@vercel/speed-insights@2/dist/index.mjs';
+    injectSpeedInsights();
+  </script>
   <script src="/app.js"></script>
   <script>
     // 生成花瓣
